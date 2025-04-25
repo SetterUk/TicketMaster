@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Shows - Admin{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Manage Shows</h2>
+    <div>
+        <a href="{% url 'adminpanel:dashboard' %}" class="btn btn-outline-secondary me-2">Dashboard</a>
+        <a href="{% url 'adminpanel:show_add' %}" class="btn btn-primary">
+            <i class="fas fa-plus me-1"></i> Add New Show
+        </a>
+    </div>
+</div>
+
+<div class="card shadow">
+    <div class="card-body">
+        {% if shows %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Date & Time</th>
+                        <th>Location</th>
+                        <th>Price</th>
+                        <th>Seats</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for show in shows %}
+                    <tr>
+                        <td>{{ show.title }}</td>
+                        <td>{{ show.date }} at {{ show.time }}</td>
+                        <td>{{ show.location }}</td>
+                        <td>${{ show.price }}</td>
+                        <td>
+                            <div class="progress" style="height: 20px;">
+                                {% with booked_percentage=show.available_seats|divisibleby:show.total_seats|floatformat:0 %}
+                                <div class="progress-bar 
+                                    {% if show.available_seats == 0 %}bg-danger
+                                    {% elif show.available_seats < show.total_seats|divisibleby:4 %}bg-warning
+                                    {% else %}bg-success{% endif %}" 
+                                    role="progressbar" 
+                                    style="width: {{ booked_percentage }}%">
+                                    {{ show.available_seats }}/{{ show.total_seats }}
+                                </div>
+                                {% endwith %}
+                            </div>
+                        </td>
+                        <td>{{ show.created_at|date:"M d, Y" }}</td>
+                        <td>
+                            <a href="{% url 'adminpanel:show_edit' show.id %}" class="btn btn-sm btn-primary me-1">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a href="{% url 'adminpanel:show_delete' show.id %}" class="btn btn-sm btn-danger">
+                                <i class="fas fa-trash-alt"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+            <p class="mb-0">No shows have been created yet.</p>
+        </div>
+        <a href="{% url 'adminpanel:show_add' %}" class="btn btn-primary">Create Your First Show</a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

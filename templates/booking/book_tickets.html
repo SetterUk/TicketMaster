@@ -1,0 +1,330 @@
+{% extends 'base.html' %}
+
+{% block title %}Book Tickets - {{ show.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .seat {
+        width: 40px;
+        height: 40px;
+        margin: 5px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: 500;
+    }
+    .seat-available {
+        background-color: #f8f9fa;
+        border: 2px solid #e9ecef;
+        color: #495057;
+    }
+    .seat-available:hover {
+        background-color: #e9ecef;
+        transform: scale(1.05);
+    }
+    .seat-booked {
+        background-color: #dee2e6;
+        color: #adb5bd;
+        cursor: not-allowed;
+        border: 2px solid #ced4da;
+    }
+    .seat-selected {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        border: none;
+        transform: scale(1.05);
+    }
+    .seat-row-label {
+        width: 30px;
+        display: inline-block;
+        text-align: center;
+        font-weight: 600;
+        color: #495057;
+    }
+    .stage {
+        height: 50px;
+        background: linear-gradient(135deg, #343a40, #212529);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        margin-bottom: 30px;
+        font-weight: 600;
+        letter-spacing: 2px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .booking-summary {
+        position: sticky;
+        top: 2rem;
+    }
+    .seat-legend {
+        background: white;
+        padding: 1rem;
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+    .selected-seats-list {
+        max-height: 300px;
+        overflow-y: auto;
+    }
+    .selected-seats-list::-webkit-scrollbar {
+        width: 6px;
+    }
+    .selected-seats-list::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 3px;
+    }
+    .selected-seats-list::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 3px;
+    }
+    .selected-seats-list::-webkit-scrollbar-thumb:hover {
+        background: #555;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-gradient text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-ticket-alt me-2"></i>
+                        Book Tickets for {{ show.title }}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <div class="stage">
+                            <i class="fas fa-theater-masks me-2"></i>
+                            STAGE
+                        </div>
+                        
+                        <div class="text-center mb-3">
+                            <small class="text-muted">Click on available seats to select them</small>
+                        </div>
+                        
+                        <div class="seat-map text-center">
+                            {% for row_key, seats in seat_rows.items %}
+                            <div class="seat-row mb-2">
+                                <div class="seat-row-label">{{ row_key }}</div>
+                                {% for seat in seats %}
+                                <div class="seat {% if seat.is_booked %}seat-booked{% else %}seat-available{% endif %}" 
+                                     data-seat-id="{{ seat.id }}" 
+                                     data-seat-row="{{ seat.row }}" 
+                                     data-seat-number="{{ seat.number }}"
+                                     onclick="toggleSeatSelection(this)">
+                                    {{ seat.number }}
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="seat-legend text-center mt-4">
+                            <div class="d-flex justify-content-center gap-4">
+                                <div>
+                                    <div class="seat seat-available d-inline-block"></div>
+                                    <span class="ms-2">Available</span>
+                                </div>
+                                <div>
+                                    <div class="seat seat-selected d-inline-block"></div>
+                                    <span class="ms-2">Selected</span>
+                                </div>
+                                <div>
+                                    <div class="seat seat-booked d-inline-block"></div>
+                                    <span class="ms-2">Booked</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <form id="booking-form" method="post" action="{% url 'booking:book_tickets' show.id %}">
+                        {% csrf_token %}
+                        <div id="selected-seats-container"></div>
+                        
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg" id="book-button" disabled>
+                                <i class="fas fa-check-circle me-2"></i>
+                                Confirm Booking
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="booking-summary">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">
+                            <i class="fas fa-receipt me-2"></i>
+                            Booking Summary
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <h5 class="text-primary">{{ show.title }}</h5>
+                        <div class="mb-3">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="far fa-calendar-alt me-2 text-primary"></i>
+                                {{ show.date }}
+                            </div>
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="far fa-clock me-2 text-primary"></i>
+                                {{ show.time }}
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-map-marker-alt me-2 text-primary"></i>
+                                {{ show.location }}
+                            </div>
+                        </div>
+                        
+                        <hr>
+                        
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Price per ticket:</span>
+                            <strong>${{ show.price }}</strong>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Selected seats:</span>
+                            <strong id="selected-seats-count">0</strong>
+                        </div>
+                        
+                        <hr>
+                        
+                        <div class="d-flex justify-content-between mb-3">
+                            <span class="text-primary fw-bold">Total:</span>
+                            <h4 class="text-primary mb-0" id="total-price">$0.00</h4>
+                        </div>
+                        
+                        <div id="selected-seats-list" class="selected-seats-list">
+                            <p class="text-muted text-center">No seats selected</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Important Information
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-unstyled">
+                            <li class="mb-3">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                Select the seats you want to book
+                            </li>
+                            <li class="mb-3">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                Payment will be collected at the venue
+                            </li>
+                            <li class="mb-3">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                Bring your booking ID and a valid ID
+                            </li>
+                            <li>
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                No refunds after booking
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const ticketPrice = {{ show.price }};
+    const selectedSeats = new Set();
+    
+    function toggleSeatSelection(element) {
+        if (element.classList.contains('seat-booked')) {
+            return;
+        }
+        
+        const seatId = element.getAttribute('data-seat-id');
+        const seatRow = element.getAttribute('data-seat-row');
+        const seatNumber = element.getAttribute('data-seat-number');
+        
+        if (element.classList.contains('seat-selected')) {
+            element.classList.remove('seat-selected');
+            element.classList.add('seat-available');
+            selectedSeats.delete(seatId);
+            
+            const input = document.querySelector(`input[value="${seatId}"]`);
+            if (input) {
+                input.remove();
+            }
+        } else {
+            element.classList.remove('seat-available');
+            element.classList.add('seat-selected');
+            selectedSeats.add({
+                id: seatId,
+                row: seatRow,
+                number: seatNumber
+            });
+            
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'seats';
+            input.value = seatId;
+            document.getElementById('selected-seats-container').appendChild(input);
+        }
+        
+        updateBookingSummary();
+    }
+    
+    function updateBookingSummary() {
+        const selectedSeatsCount = selectedSeats.size;
+        const totalPrice = selectedSeatsCount * ticketPrice;
+        
+        document.getElementById('selected-seats-count').textContent = selectedSeatsCount;
+        document.getElementById('total-price').textContent = `$${totalPrice.toFixed(2)}`;
+        
+        const bookButton = document.getElementById('book-button');
+        bookButton.disabled = selectedSeatsCount === 0;
+        
+        const selectedSeatsList = document.getElementById('selected-seats-list');
+        
+        if (selectedSeatsCount === 0) {
+            selectedSeatsList.innerHTML = '<p class="text-muted text-center">No seats selected</p>';
+        } else {
+            let html = '<ul class="list-group list-group-flush">';
+            
+            const seatsArray = Array.from(selectedSeats);
+            seatsArray.sort((a, b) => {
+                if (a.row !== b.row) {
+                    return a.row.localeCompare(b.row);
+                }
+                return parseInt(a.number) - parseInt(b.number);
+            });
+            
+            seatsArray.forEach(seat => {
+                html += `<li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span>
+                        <i class="fas fa-chair me-2 text-primary"></i>
+                        Seat ${seat.row}${seat.number}
+                    </span>
+                    <span class="badge bg-primary rounded-pill">$${ticketPrice.toFixed(2)}</span>
+                </li>`;
+            });
+            
+            html += '</ul>';
+            selectedSeatsList.innerHTML = html;
+        }
+    }
+</script>
+{% endblock %}
