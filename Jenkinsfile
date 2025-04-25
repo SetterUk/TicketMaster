@@ -8,7 +8,8 @@ pipeline {
         DOCKER_IMAGE = 'ticketmaster'
         DOCKER_TAG = "${BUILD_NUMBER}"
         DOCKER_COMPOSE = 'docker-compose'
-        PATH = "C:\\Python313;C:\\Python313\\Scripts;${env.PATH}"
+        PYTHON_HOME = "C:\\Users\\Administrator\\AppData\\Local\\Programs\\Python\\Python313"
+        PATH = "${PYTHON_HOME};${PYTHON_HOME}\\Scripts;${env.PATH}"
     }
     
     stages {
@@ -22,8 +23,9 @@ pipeline {
             steps {
                 bat """
                     echo "Checking Python installation..."
-                    py -3.13 --version
-                    py -3.13 -m pip --version
+                    echo "Python Home: %PYTHON_HOME%"
+                    "%PYTHON_HOME%\\python.exe" --version
+                    "%PYTHON_HOME%\\python.exe" -m pip --version
                 """
             }
         }
@@ -33,10 +35,10 @@ pipeline {
                 bat """
                     echo "Creating Virtual Environment..."
                     if exist "%VIRTUAL_ENV%" rmdir /s /q "%VIRTUAL_ENV%"
-                    py -3.13 -m venv "%VIRTUAL_ENV%"
+                    "%PYTHON_HOME%\\python.exe" -m venv "%VIRTUAL_ENV%"
                     call "%VIRTUAL_ENV%\\Scripts\\activate.bat"
-                    py -3.13 -m pip install --upgrade pip
-                    pip install -r requirements.txt
+                    "%VIRTUAL_ENV%\\Scripts\\python.exe" -m pip install --upgrade pip
+                    "%VIRTUAL_ENV%\\Scripts\\pip.exe" install -r requirements.txt
                 """
             }
         }
@@ -45,7 +47,7 @@ pipeline {
             steps {
                 bat """
                     call "%VIRTUAL_ENV%\\Scripts\\activate.bat"
-                    python manage.py test
+                    "%VIRTUAL_ENV%\\Scripts\\python.exe" manage.py test
                 """
             }
         }
@@ -54,8 +56,8 @@ pipeline {
             steps {
                 bat """
                     call "%VIRTUAL_ENV%\\Scripts\\activate.bat"
-                    pip install bandit
-                    bandit -r .
+                    "%VIRTUAL_ENV%\\Scripts\\pip.exe" install bandit
+                    "%VIRTUAL_ENV%\\Scripts\\bandit.exe" -r .
                 """
             }
         }
