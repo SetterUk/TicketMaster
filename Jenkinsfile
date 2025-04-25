@@ -8,7 +8,7 @@ pipeline {
         DOCKER_IMAGE = 'ticketmaster'
         DOCKER_TAG = "${BUILD_NUMBER}"
         DOCKER_COMPOSE = 'docker-compose'
-        PYTHON_HOME = "C:\\Users\\Administrator\\AppData\\Local\\Programs\\Python\\Python313"
+        PYTHON_HOME = "C:\\Users\\Acer\\AppData\\Local\\Programs\\Python\\Python313"
         PATH = "${PYTHON_HOME};${PYTHON_HOME}\\Scripts;${env.PATH}"
     }
     
