@@ -22,8 +22,8 @@ pipeline {
             steps {
                 bat """
                     echo "Checking Python installation..."
-                    python --version
-                    pip --version
+                    py -3.13 --version
+                    py -3.13 -m pip --version
                 """
             }
         }
@@ -33,9 +33,9 @@ pipeline {
                 bat """
                     echo "Creating Virtual Environment..."
                     if exist "%VIRTUAL_ENV%" rmdir /s /q "%VIRTUAL_ENV%"
-                    python -m venv "%VIRTUAL_ENV%"
+                    py -3.13 -m venv "%VIRTUAL_ENV%"
                     call "%VIRTUAL_ENV%\\Scripts\\activate.bat"
-                    python -m pip install --upgrade pip
+                    py -3.13 -m pip install --upgrade pip
                     pip install -r requirements.txt
                 """
             }
