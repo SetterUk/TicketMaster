@@ -2,13 +2,13 @@ pipeline {
     agent any
     
     environment {
-        PYTHON_VERSION = '3.9'
+        PYTHON_VERSION = '3.13.2'
         DJANGO_SETTINGS_MODULE = 'ticket_booking_system.settings'
         VIRTUAL_ENV = "${WORKSPACE}\\venv"
         DOCKER_IMAGE = 'ticketmaster'
         DOCKER_TAG = "${BUILD_NUMBER}"
         DOCKER_COMPOSE = 'docker-compose'
-        PATH = "C:\\Python39;C:\\Python39\\Scripts;${env.PATH}"
+        PATH = "C:\\Python313;C:\\Python313\\Scripts;${env.PATH}"
     }
     
     stages {
