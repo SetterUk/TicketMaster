@@ -19,10 +19,10 @@ pipeline {
         
         stage('Setup Python Environment') {
             steps {
-                sh """
-                    python -m venv ${VIRTUAL_ENV}
-                    . ${VIRTUAL_ENV}/bin/activate
-                    pip install --upgrade pip
+                bat """
+                    python -m venv %VIRTUAL_ENV%
+                    call %VIRTUAL_ENV%\\Scripts\\activate.bat
+                    python -m pip install --upgrade pip
                     pip install -r requirements.txt
                 """
             }
@@ -30,8 +30,8 @@ pipeline {
         
         stage('Run Tests') {
             steps {
-                sh """
-                    . ${VIRTUAL_ENV}/bin/activate
+                bat """
+                    call %VIRTUAL_ENV%\\Scripts\\activate.bat
                     python manage.py test
                 """
             }
@@ -39,8 +39,8 @@ pipeline {
         
         stage('Security Checks') {
             steps {
-                sh """
-                    . ${VIRTUAL_ENV}/bin/activate
+                bat """
+                    call %VIRTUAL_ENV%\\Scripts\\activate.bat
                     pip install bandit
                     bandit -r .
                 """
@@ -49,8 +49,8 @@ pipeline {
         
         stage('Build Docker Image') {
             steps {
-                sh """
-                    docker build -t ticket-booking:${BUILD_NUMBER} .
+                bat """
+                    docker build -t ticket-booking:%BUILD_NUMBER% .
                 """
             }
         }
@@ -60,7 +60,7 @@ pipeline {
                 branch 'staging'
             }
             steps {
-                sh """
+                bat """
                     docker-compose -f docker-compose.staging.yml up -d
                 """
             }
@@ -71,7 +71,7 @@ pipeline {
                 branch 'main'
             }
             steps {
-                sh """
+                bat """
                     docker-compose -f docker-compose.prod.yml up -d
                 """
             }
