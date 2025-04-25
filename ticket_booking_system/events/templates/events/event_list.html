@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Upcoming Events</h1>
+    
+    <div class="category-buttons text-center">
+        <a href="{% url 'events:event_list' %}" class="btn btn-outline-primary">All Events</a>
+        <a href="{% url 'events:event_list' %}?category=Concerts" class="btn btn-outline-primary">Concerts</a>
+        <a href="{% url 'events:event_list' %}?category=Theater" class="btn btn-outline-primary">Theater</a>
+        <a href="{% url 'events:event_list' %}?category=Sports" class="btn btn-outline-primary">Sports</a>
+        <a href="{% url 'events:event_list' %}?category=Comedy" class="btn btn-outline-primary">Comedy</a>
+    </div>
+
+    <div class="row">
+        {% for event in events %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100">
+                <img src="{{ event.image_url }}" class="card-img-top" alt="{{ event.title }}" style="height: 200px; object-fit: cover;">
+                <div class="card-body">
+                    <h5 class="card-title">{{ event.title }}</h5>
+                    <p class="card-text">{{ event.description }}</p>
+                    <p class="card-text"><small class="text-muted">{{ event.date }} at {{ event.time }}</small></p>
+                    <p class="card-text"><strong>Venue:</strong> {{ event.venue }}</p>
+                    <p class="card-text"><strong>Price:</strong> ${{ event.price }}</p>
+                    <p class="card-text"><strong>Available Seats:</strong> {{ event.available_seats }}</p>
+                    <a href="{% url 'events:event_detail' event.id %}" class="btn btn-primary">View Details</a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col">
+            <p>No events found.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %} 
