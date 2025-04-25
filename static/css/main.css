@@ -34,12 +34,12 @@ body {
 }
 
 .hero-section {
-    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-    color: white;
-    padding: 4rem 0;
-    margin-bottom: 3rem;
-    border-radius: 15px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('/static/images/hero-bg.jpg');
+    background-size: cover;
+    background-position: center;
+    padding: 100px 0;
+    margin-top: -24px;
+    margin-bottom: 40px;
 }
 
 .card {
@@ -76,7 +76,7 @@ body {
 
 .btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(74, 0, 224, 0.3);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 .btn-outline-primary {
@@ -88,13 +88,18 @@ body {
 }
 
 .btn-outline-primary:hover {
-    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-    border-color: transparent;
     transform: translateY(-2px);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 .show-card {
     margin-bottom: 2rem;
+    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+}
+
+.show-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
 .show-card .card-body {
@@ -137,12 +142,18 @@ body {
 
 /* Animations */
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .fade-in {
-    animation: fadeIn 0.5s ease-out;
+    animation: fadeIn 0.5s ease-in;
 }
 
 /* Responsive adjustments */
@@ -179,4 +190,23 @@ body {
 .admin-sidebar .nav-link.active {
     color: white;
     background: rgba(255, 255, 255, 0.2);
+}
+
+.category-card {
+    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+    cursor: pointer;
+}
+
+.category-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.show-details i {
+    width: 20px;
+}
+
+.badge {
+    font-weight: 500;
+    padding: 8px 12px;
 }

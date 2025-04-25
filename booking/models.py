@@ -2,6 +2,12 @@ from django.db import models
 from django.contrib.auth.models import User
 import uuid
 
+class Category(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+
+    def __str__(self):
+        return self.name
+
 class Show(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField()
@@ -9,8 +15,9 @@ class Show(models.Model):
     time = models.TimeField()
     location = models.CharField(max_length=200)
     price = models.DecimalField(max_digits=10, decimal_places=2)
-    total_seats = models.IntegerField()
-    available_seats = models.IntegerField()
+    total_seats = models.PositiveIntegerField()
+    available_seats = models.PositiveIntegerField()
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True)
     image_url = models.CharField(max_length=500, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -19,8 +26,7 @@ class Show(models.Model):
         return f"{self.title} - {self.date} {self.time}"
     
     def save(self, *args, **kwargs):
-        # If this is a new show, set available seats equal to total seats
-        if not self.pk:
+        if not self.available_seats:
             self.available_seats = self.total_seats
         super().save(*args, **kwargs)
 

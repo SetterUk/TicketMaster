@@ -1,11 +1,16 @@
 from django.contrib import admin
-from .models import Show, Seat, Booking
+from .models import Show, Seat, Booking, Category
+
+@admin.register(Category)
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ('name',)
+    search_fields = ('name',)
 
 @admin.register(Show)
 class ShowAdmin(admin.ModelAdmin):
-    list_display = ('title', 'date', 'time', 'location', 'price', 'available_seats')
+    list_display = ('title', 'category', 'date', 'time', 'location', 'price', 'available_seats')
     search_fields = ('title', 'location')
-    list_filter = ('date',)
+    list_filter = ('category', 'date')
 
 @admin.register(Seat)
 class SeatAdmin(admin.ModelAdmin):

@@ -3,13 +3,25 @@ from django.views import View
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.db import transaction
-from .models import Show, Seat, Booking
+from .models import Show, Seat, Booking, Category
 import json
 
 class HomeView(View):
     def get(self, request):
-        shows = Show.objects.filter(available_seats__gt=0).order_by('date', 'time')
-        return render(request, 'booking/home.html', {'shows': shows})
+        category_name = request.GET.get('category')
+        shows = Show.objects.all()
+        
+        if category_name:
+            shows = shows.filter(category__name=category_name)
+        
+        shows = shows.filter(available_seats__gt=0).order_by('date', 'time')
+        categories = Category.objects.all()
+        
+        return render(request, 'booking/home.html', {
+            'shows': shows,
+            'categories': categories,
+            'current_category': category_name
+        })
 
 
 class ShowDetailView(View):

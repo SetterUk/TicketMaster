@@ -2,8 +2,11 @@ pipeline {
     agent any
     
     environment {
+        PYTHON_VERSION = '3.9'
+        DJANGO_SETTINGS_MODULE = 'ticket_booking_system.settings'
+        VIRTUAL_ENV = 'venv'
         DOCKER_IMAGE = 'ticketmaster'
-        DOCKER_TAG = "${env.BUILD_NUMBER}"
+        DOCKER_TAG = "${BUILD_NUMBER}"
         DOCKER_COMPOSE = 'docker-compose'
     }
     
@@ -14,55 +17,52 @@ pipeline {
             }
         }
         
-        stage('Test') {
+        stage('Setup Python Environment') {
             steps {
-                sh '''
-                    python -m venv venv
-                    . venv/bin/activate
+                sh """
+                    python -m venv ${VIRTUAL_ENV}
+                    . ${VIRTUAL_ENV}/bin/activate
+                    pip install --upgrade pip
                     pip install -r requirements.txt
+                """
+            }
+        }
+        
+        stage('Run Tests') {
+            steps {
+                sh """
+                    . ${VIRTUAL_ENV}/bin/activate
                     python manage.py test
-                '''
+                """
             }
         }
         
-        stage('Code Quality') {
+        stage('Security Checks') {
             steps {
-                sh '''
-                    . venv/bin/activate
-                    pip install flake8
-                    flake8 .
-                '''
-            }
-        }
-        
-        stage('Security Check') {
-            steps {
-                sh '''
-                    . venv/bin/activate
+                sh """
+                    . ${VIRTUAL_ENV}/bin/activate
                     pip install bandit
                     bandit -r .
-                '''
+                """
             }
         }
         
         stage('Build Docker Image') {
             steps {
-                script {
-                    docker.build("${DOCKER_IMAGE}:${DOCKER_TAG}")
-                }
+                sh """
+                    docker build -t ticket-booking:${BUILD_NUMBER} .
+                """
             }
         }
         
         stage('Deploy to Staging') {
             when {
-                branch 'develop'
+                branch 'staging'
             }
             steps {
-                sh '''
-                    ${DOCKER_COMPOSE} -f docker-compose.yml up -d
-                    ${DOCKER_COMPOSE} exec -T web python manage.py migrate
-                    ${DOCKER_COMPOSE} exec -T web python manage.py collectstatic --no-input
-                '''
+                sh """
+                    docker-compose -f docker-compose.staging.yml up -d
+                """
             }
         }
         
@@ -71,19 +71,15 @@ pipeline {
                 branch 'main'
             }
             steps {
-                input message: 'Deploy to production?'
-                sh '''
-                    ${DOCKER_COMPOSE} -f docker-compose.prod.yml up -d
-                    ${DOCKER_COMPOSE} exec -T web python manage.py migrate
-                    ${DOCKER_COMPOSE} exec -T web python manage.py collectstatic --no-input
-                '''
+                sh """
+                    docker-compose -f docker-compose.prod.yml up -d
+                """
             }
         }
     }
     
     post {
         always {
-            sh '${DOCKER_COMPOSE} down || true'
             cleanWs()
         }
         success {
@@ -91,9 +87,6 @@ pipeline {
         }
         failure {
             echo 'Pipeline failed!'
-            mail to: 'admin@ticketmaster.com',
-                 subject: "Failed Pipeline: ${currentBuild.fullDisplayName}",
-                 body: "Pipeline failed. Please check: ${env.BUILD_URL}"
         }
     }
 }
